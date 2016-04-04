@@ -1,11 +1,13 @@
-# The Official Belka Swift Style Guide.
-
-This style guide is different from others you may see, because the focus is centered on readability for print and the web.
-
-Our overarching goals are conciseness, readability, and simplicity.
+# The Official Belka iOS Dev Guideline.
 
 ## Table of Contents
 
+* [Project Structures]()
+* [Dependency Management]()
+  * [CocoaPods](#cocoapods)
+* [Common Libraries]()
+* [Deployment]()
+  * [Fastlane](#fastlane)
 * [Naming](#naming)
   * [Prose](#prose)
   * [Class Prefixes](#class-prefixes)
@@ -30,6 +32,111 @@ Our overarching goals are conciseness, readability, and simplicity.
 * [Smiley Face](#smiley-face)
 * [Credits](#credits)
 
+## Project Structures
+You should structure any new iOS project as follow:
+
+```	
+ .
+ ├── AppDelegate.swift
+ ├── Constants	
+ ├── Controllers (or ViewModels, if your architecture is MVVM)
+ ├── Extensions
+ ├── Helpers
+ ├── Models
+ ├── Resources
+ ├── Stores
+ ├── Views
+```
+
+
+## Dependency Management
+
+### CocoaPods
+If you're planning on including external dependencies (e.g. third-party libraries) in your project, [CocoaPods](https://cocoapods.org) offers easy and fast integration. Install it like so:
+
+```bash
+sudo gem install cocoapods
+```
+
+To get started, move inside your iOS project folder and run
+
+```bash
+pod init
+```
+
+This creates a Podfile, which will hold all your dependencies in one place. After adding your dependencies to the Podfile, you run
+```bash
+pod install
+```
+
+to install the libraries and include them as part of a workspace which also holds your own project. It is generally [recommended to commit the installed dependencies to your own repo][committing-pods], instead of relying on having each developer running `pod install` after a fresh checkout.
+
+Note that from now on, you'll need to open the `.xcworkspace` file instead of `.xcproject`, or your code will not compile. The command
+
+```bash
+pod update
+```
+
+will update all pods to the newest versions permitted by the Podfile. You can use a wealth of [operators][cocoapods-pod-syntax] to specify your exact version requirements.
+
+[cocoapods]: https://cocoapods.org/
+[cocoapods-pod-syntax]: http://guides.cocoapods.org/syntax/podfile.html#pod
+[committing-pods]: https://www.dzombak.com/blog/2014/03/including-pods-in-source-control.html
+
+## Common Libraries
+The libraries featured here tend to reduce boilerplate code (e.g. Auto Layout) or solve complex problems that require extensive testing, such as date calculations. As you become more proficient with iOS, be sure to dive into the source here and there, and acquaint yourself with their underlying Apple frameworks. You'll find that those alone can do a lot of the heavy lifting.
+
+### Alamofire
+Alamofire is an HTTP networking library written in Swift.
+
+### Moya
+So the basic idea of Moya is that we want some network abstraction layer that sufficiently encapsulates actually calling Alamofire directly. It should be simple enough that common things are easy, but comprehensive enough that complicated things are also easy.
+
+### HanekeSwift
+Haneke is a lightweight generic cache for iOS and tvOS written in Swift 2.0. It's designed to be super-simple to use.
+
+### SwiftyJSON
+The better way to deal with JSON data in Swift
+
+### ObjectMapper
+ObjectMapper is a framework written in Swift that makes it easy for you to convert your model objects (classes and structs) to and from JSON.
+
+### XCGLogger
+A debug log framework for use in Swift projects. Allows you to log details to the console (and optionally a file), just like you would have with NSLog or println, but with additional information, such as the date, function name, filename and line number.
+
+
+## Deployment
+
+### fastlane
+fastlane lets you define and run your deployment pipelines for different environments. It helps you unify your app’s release process and automate the whole process. fastlane connects all fastlane tools and third party tools, like CocoaPods and Gradle.
+
+Each application should be have their fastlane in order to make the App deployment as simple as possibile.
+
+To get started, move in your iOS project folder and run 
+
+```bash
+fastlane init
+``` 
+
+after that follow the setup assistant which will set up fastlane for you. 
+You can customize all the fastlane Action editing the `Fastlane` file.
+
+#### Basic configuration
+The `Fastfile` must include the following basic actions:
+- Deploy on App Store
+- Deploy on TestFlight
+
+**Example of beta deployment**
+
+```ruby
+lane :beta do
+  increment_build_number
+  cocoapods
+  testflight
+
+  slack
+end
+```
 
 ## Naming
 
@@ -202,6 +309,21 @@ Classes have [reference semantics](https://developer.apple.com/library/mac/docum
 
 Sometimes, things should be structs but need to conform to `AnyObject` or are historically modeled as classes already (`NSDate`, `NSSet`). Try to follow these guidelines as closely as possible.
 
+#### When should I use a Struct ?
+As a general guideline, consider creating a structure when one or more of these conditions apply:
+
+- The structure’s primary purpose is to encapsulate a few relatively simple data values.
+- It is reasonable to expect that the encapsulated values will be copied rather than referenced when you assign or pass around an instance of that structure.
+- Any properties stored by the structure are themselves value types, which would also be expected to be copied rather than referenced.
+- **The structure does not need to inherit properties or behavior from another existing type.**
+
+Examples of good candidates for structures include:
+
+- The size of a geometric shape, perhaps encapsulating a width property and a height property, both of type Double.
+- A way to refer to ranges within a series, perhaps encapsulating a start property and a length property, both of type Int.
+- A point in a 3D coordinate system, perhaps encapsulating x, y and z properties, each of type Double.
+
+
 ### Example definition
 
 Here's an example of a well-styled class definition:
@@ -300,7 +422,9 @@ extension MyViewcontroller: UIScrollViewDelegate {
 }
 ```
 
-TODO: Aggiungere gestione dei nomi delle extension
+### Use of Protocols to keep a good code redability
+At this [link](https://www.natashatherobot.com/using-swift-extensions/?utm_campaign=iOS%2BDev%2BWeekly&utm_medium=web&utm_source=iOS_Dev_Weekly_Issue_244) you can find a very good explanation on how to use Protocols and Extensions to maintain a good code redability.
+
 
 **Not Preferred:**
 ```swift
@@ -585,78 +709,26 @@ let color = "red"
 let colour = "red"
 ```
 
-## Copyright Statement
-
-The following copyright statement should be included at the top of every source
-file:
-
-    /*
-     * Copyright (c) 2015 Razeware LLC
-     * 
-     * Permission is hereby granted, free of charge, to any person obtaining a copy
-     * of this software and associated documentation files (the "Software"), to deal
-     * in the Software without restriction, including without limitation the rights
-     * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-     * copies of the Software, and to permit persons to whom the Software is
-     * furnished to do so, subject to the following conditions:
-     * 
-     * The above copyright notice and this permission notice shall be included in
-     * all copies or substantial portions of the Software.
-     * 
-     * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-     * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-     * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-     * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-     * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-     * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-     * THE SOFTWARE.
-     */
-
-## Smiley Face
-
-Smiley faces are a very prominent style feature of the raywenderlich.com site! It is very important to have the correct smile signifying the immense amount of happiness and excitement for the coding topic. The closing square bracket `]` is used because it represents the largest smile able to be captured using ASCII art. A closing parenthesis `)` creates a half-hearted smile, and thus is not preferred.
-
-**Preferred:**
-```
-:]
-```
-
-**Not Preferred:**
-```
-:)
-```  
+## License
+Android-Toggle-Switch is Copyright (c) 2016 Belka, srl. It is free software, and may be redistributed under the terms specified in the LICENSE file.  
 
 
 ## Credits
 
-This style guide is a collaborative effort from the most stylish raywenderlich.com team members: 
+We drew inspiration from other Code Guidelines and online materials:
 
-* [Jawwad Ahmad](https://github.com/jawwad)
-* [Soheil Moayedi Azarpour](https://github.com/moayes)
-* [Scott Berrevoets](https://github.com/Scott90)
-* [Eric Cerney](https://github.com/ecerney)
-* [Sam Davies](https://github.com/sammyd)
-* [Evan Dekhayser](https://github.com/edekhayser)
-* [Jean-Pierre Distler](https://github.com/pdistler)
-* [Colin Eberhardt](https://github.com/ColinEberhardt)
-* [Greg Heo](https://github.com/gregheo)
-* [Matthijs Hollemans](https://github.com/hollance)
-* [Erik Kerber](https://github.com/eskerber)
-* [Christopher LaPollo](https://github.com/elephantronic)
-* [Ben Morrow](https://github.com/benmorrow)
-* [Andy Pereira](https://github.com/macandyp)
-* [Ryan Nystrom](https://github.com/rnystrom)
-* [Cesare Rocchi](https://github.com/funkyboy)
-* [Ellen Shapiro](https://github.com/designatednerd)
-* [Marin Todorov](https://github.com/icanzilb)
-* [Chris Wagner](https://github.com/cwagdev)
-* [Ray Wenderlich](https://github.com/rwenderlich)
-* [Jack Wu](https://github.com/jackwu95)
-
-Hat tip to [Nicholas Waynik](https://github.com/ndubbs) and the [Objective-C Style Guide](https://github.com/raywenderlich/objective-c-style-guide) team!
-
-We also drew inspiration from Apple’s reference material on Swift:
-
+* [raywenderlich.com](http://raywenderlich.com)
+* [futurice](https://github.com/futurice/ios-good-practices)
 * [The Swift Programming Language](https://developer.apple.com/library/prerelease/ios/documentation/swift/conceptual/swift_programming_language/index.html)
 * [Using Swift with Cocoa and Objective-C](https://developer.apple.com/library/prerelease/ios/documentation/Swift/Conceptual/BuildingCocoaApps/index.html)
 * [Swift Standard Library Reference](https://developer.apple.com/library/prerelease/ios/documentation/General/Reference/SwiftStandardLibraryReference/index.html)
+
+## About Belka
+![Alt text](http://s2.postimg.org/rcjk3hf5x/logo_rosso.jpg)
+
+[Belka](http://belka.us/en) is a Digital Agency specialized in design, mobile applications development and custom solutions.
+We love open source software! You can [see our projects](http://belka.us/en/portfolio/) or look at our case studies.
+
+Interested? [Hire us](http://belka.us/en/contacts/) to help build your next amazing project.
+
+[www.belka.us](http://belka.us/en)
